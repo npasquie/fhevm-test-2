@@ -13,6 +13,8 @@ contract YaoPrivate is GatewayCaller {
     euint64 highestWealth;
     address public richest;
 
+    /// @dev this contract accepets 3 user but the same logic can be used
+    /// for an arbitrary number of users.
     constructor(address _alice, address _bob, address _carol) {
         alice = _alice;
         bob = _bob;
