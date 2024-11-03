@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import "fhevm/lib/TFHE.sol";
 import "fhevm/gateway/GatewayCaller.sol";
 
+/// @notice Yao's millionaire problem FHEVM implementation
+/// finds who is the richest among Alice, Bob, and Carol
 contract YaoPrivate is GatewayCaller {
     address immutable alice;
     address immutable bob;
@@ -19,12 +21,14 @@ contract YaoPrivate is GatewayCaller {
         TFHE.allow(highestWealth, address(this));
     }
 
-    // alternatlively, wealth submission could be done through an encrypted erc20.
-    // since the standard does not have a method to share encrypted balances
-    // with another contract, we would have to approve, then transfer the full
-    // wealth of the user to this contract, which would save its encrypted balance
-    // difference before and after the transfer, then transfer the full amount back
-    // to the user, then use this value to determine teh richest user.
+    /// @notice Privately evaluates the wealth of the user and asynchronoulsy
+    /// updates the richest user if needed.
+    /// @dev alternatlively, wealth submission could be done through an encrypted erc20.
+    /// since the standard does not have a method to share encrypted balances
+    /// with another contract, we would have to approve, then transfer the full
+    /// wealth of the user to this contract, which would save its encrypted balance
+    /// difference before and after the transfer, then transfer the full amount back
+    /// to the user, then use this value to determine teh richest user.
     function submitWealth(einput _wealth, bytes calldata inputProof) external {
         require(
             msg.sender == alice || msg.sender == bob || msg.sender == carol,
@@ -49,6 +53,7 @@ contract YaoPrivate is GatewayCaller {
         addParamsAddress(requestID, msg.sender);
     }
 
+    /// @notice Callback reserved for the gateway
     function isTheWealthiestDecryptionCallback(uint256 requestID, bool decryptedIsTheWealthiest) external onlyGateway {
         address[] memory sender = new address[](1);
         sender = getParamsAddress(requestID);
