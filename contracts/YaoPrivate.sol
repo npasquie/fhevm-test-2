@@ -4,12 +4,11 @@ pragma solidity ^0.8.24;
 import "fhevm/lib/TFHE.sol";
 import "fhevm/gateway/GatewayCaller.sol";
 
-import "hardhat/console.sol";
-
 contract YaoPrivate is GatewayCaller {
     address immutable alice;
     address immutable bob;
     address immutable carol;
+    bool wealthIsInitialized;
     euint64 highestWealth;
     address public richest;
 
@@ -26,13 +25,19 @@ contract YaoPrivate is GatewayCaller {
     // difference before and after the transfer, then transfer the full amount back
     // to the user, then using this value to determine teh richest user.
     function submitWealth(einput _wealth, bytes calldata inputProof) external {
-        console.log("hey");
         require(
             msg.sender == alice || msg.sender == bob || msg.sender == carol,
             "Only Alice, Bob, and Carol can submit wealth"
         );
 
         euint64 wealth = TFHE.asEuint64(_wealth, inputProof);
+
+        if (!wealthIsInitialized) {
+            highestWealth = wealth;
+            wealthIsInitialized = true;
+            richest = msg.sender;
+            return;
+        }
 
         ebool isTheWealthiest = TFHE.gt(wealth, highestWealth);
         highestWealth = TFHE.select(isTheWealthiest, wealth, highestWealth);
