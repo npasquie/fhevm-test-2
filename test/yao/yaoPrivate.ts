@@ -36,6 +36,8 @@ describe("TestYaoPrivate", function () {
     await awaitAllDecryptionResults();
     const richest = await ctx.yao["richest"]();
     expect(richest).to.equal(this.signers.alice.address);
+
+    // I also tested this contract using Remix with multiple scenarios
   });
 });
 
