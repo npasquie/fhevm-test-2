@@ -1,5 +1,6 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+import { assert } from "console";
 import { ethers } from "hardhat";
 
 import type { YaoPrivate } from "../../types";
@@ -45,10 +46,14 @@ describe.only("TestYaoPrivate", function () {
     expect(richest).to.equal(zeroAddress);
   });
 
-  // it("shouldn't allow to submit twice", async function () {
-  //   await submitWealthWith(this.signers.carol, this.instances.alice, 50);
-  //   await expect(await submitWealthWith(this.signers.carol, this.instances.alice, 50)).to.be.revertedWith();
-  // });
+  it("shouldn't allow to submit twice", async function () {
+    await submitWealthWith(this.signers.carol, this.instances.alice, 50);
+    let errorHappened = false;
+    await submitWealthWith(this.signers.carol, this.instances.alice, 50).catch(() => {
+      errorHappened = true;
+    });
+    assert(errorHappened);
+  });
 
   async function submitWealthWith(
     userSigner: HardhatEthersSigner,
