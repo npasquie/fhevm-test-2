@@ -1,3 +1,4 @@
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
@@ -11,7 +12,7 @@ interface YaoPrivateContext {
   yao: YaoPrivate;
 }
 
-describe("TestYaoPrivate", function () {
+describe.only("TestYaoPrivate", function () {
   const ctx: YaoPrivateContext = {} as YaoPrivateContext;
 
   before(async function () {
@@ -26,22 +27,32 @@ describe("TestYaoPrivate", function () {
   });
 
   it("should find the richest user", async function () {
-    submitWealthWith(this.instances.bob, 200);
-    submitWealthWith(this.instances.alice, 100);
-    const richest = await ctx.yao["richest"]();
-    console.log(richest);
-    console.log(this.signers.bob.address);
+    submitWealthWith(this.signers.bob, this.instances.bob, 200);
+    submitWealthWith(this.signers.alice, this.instances.alice, 100);
+
+    console.log(this.contractAddress);
+
+    const richest = await ctx.yao.richest();
     expect(richest).to.equal(this.signers.bob.address);
   });
 
-  async function submitWealthWith(user: FhevmInstances[keyof FhevmInstances], wealthValue: number) {
-    const input = user.createEncryptedInput(ctx.yao.getAddress(), user.address);
+  async function submitWealthWith(
+    userSigner: HardhatEthersSigner,
+    userInstance: FhevmInstances[keyof FhevmInstances],
+    wealthValue: number,
+  ) {
+    console.log("yao addr", await ctx.yao.getAddress());
+    console.log("userAdd", userSigner.address);
+    const input = userInstance.createEncryptedInput(await ctx.yao.getAddress(), userSigner.address);
     input.add64(wealthValue);
     const encryptedWealthSubmission = input.encrypt();
-    const tx = await ctx.yao["submitWealth"](
-      encryptedWealthSubmission.handles[0],
-      encryptedWealthSubmission.inputProof,
-    );
+
+    console.log(encryptedWealthSubmission.handles[0]);
+    console.log(encryptedWealthSubmission.inputProof);
+
+    const tx = await ctx.yao
+      .connect(userSigner)
+      .submitWealth(encryptedWealthSubmission.handles[0], encryptedWealthSubmission.inputProof);
     await tx.wait();
     await awaitAllDecryptionResults();
   }

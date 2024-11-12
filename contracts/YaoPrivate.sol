@@ -17,6 +17,9 @@ contract YaoPrivate is GatewayCaller {
     constructor(address[] memory participants) {
         nbOfParticipants = participants.length;
         for (uint256 i = 0; i < nbOfParticipants; i++) {
+            if (isParticipating[participants[i]]) {
+                revert("participants must be unique");
+            }
             isParticipating[participants[i]] = true;
         }
         highestWealth = TFHE.asEuint64(0);
