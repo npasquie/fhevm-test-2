@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "fhevm/lib/TFHE.sol";
 import "fhevm/gateway/GatewayCaller.sol";
+import "hardhat/console.sol";
 
 /// @notice Yao's millionaire problem FHEVM implementation, finds who is the richest participant
 contract YaoPrivate is GatewayCaller {
@@ -23,7 +24,9 @@ contract YaoPrivate is GatewayCaller {
             isParticipating[participants[i]] = true;
         }
         highestWealth = TFHE.asEuint64(0);
+        TFHE.allow(highestWealth, address(this));
         currentRichest = TFHE.asEaddress(address(0));
+        TFHE.allow(currentRichest, address(this));
     }
 
     /// @notice Privately evaluates the wealth of the caller, updates richest user and highest wealth
@@ -35,7 +38,9 @@ contract YaoPrivate is GatewayCaller {
 
         ebool callerIsTheWealthiest = TFHE.gt(callersWealth, highestWealth);
         highestWealth = TFHE.select(callerIsTheWealthiest, callersWealth, highestWealth);
+        TFHE.allow(highestWealth, address(this));
         currentRichest = TFHE.select(callerIsTheWealthiest, TFHE.asEaddress(msg.sender), currentRichest);
+        TFHE.allow(currentRichest, address(this));
 
         nbOfSubmissions++;
         hasSubmited[msg.sender] = true;
@@ -48,7 +53,6 @@ contract YaoPrivate is GatewayCaller {
             return;
         }
 
-        TFHE.allow(currentRichest, address(this));
         uint256[] memory cts = new uint256[](1);
         cts[0] = Gateway.toUint256(currentRichest);
         Gateway.requestDecryption(cts, this.richestDecryptionCallback.selector, 0, block.timestamp + 100, false);

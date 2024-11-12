@@ -27,10 +27,8 @@ describe.only("TestYaoPrivate", function () {
   });
 
   it("should find the richest user", async function () {
-    submitWealthWith(this.signers.bob, this.instances.bob, 200);
-    submitWealthWith(this.signers.alice, this.instances.alice, 100);
-
-    console.log(this.contractAddress);
+    await submitWealthWith(this.signers.bob, this.instances.bob, 200);
+    await submitWealthWith(this.signers.alice, this.instances.alice, 100);
 
     const richest = await ctx.yao.richest();
     expect(richest).to.equal(this.signers.bob.address);
@@ -41,14 +39,9 @@ describe.only("TestYaoPrivate", function () {
     userInstance: FhevmInstances[keyof FhevmInstances],
     wealthValue: number,
   ) {
-    console.log("yao addr", await ctx.yao.getAddress());
-    console.log("userAdd", userSigner.address);
     const input = userInstance.createEncryptedInput(await ctx.yao.getAddress(), userSigner.address);
     input.add64(wealthValue);
     const encryptedWealthSubmission = input.encrypt();
-
-    console.log(encryptedWealthSubmission.handles[0]);
-    console.log(encryptedWealthSubmission.inputProof);
 
     const tx = await ctx.yao
       .connect(userSigner)
