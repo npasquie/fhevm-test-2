@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import "fhevm/lib/TFHE.sol";
 import "fhevm/gateway/GatewayCaller.sol";
-import "hardhat/console.sol";
 
 /// @notice Yao's millionaire problem FHEVM implementation, finds who is the richest participant
 contract YaoPrivate is GatewayCaller {

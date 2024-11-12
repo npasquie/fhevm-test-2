@@ -8,6 +8,8 @@ import { createInstances } from "../instance";
 import { getSigners, initSigners } from "../signers";
 import type { FhevmInstances } from "../types";
 
+const zeroAddress = "0x0000000000000000000000000000000000000000";
+
 interface YaoPrivateContext {
   yao: YaoPrivate;
 }
@@ -27,12 +29,26 @@ describe.only("TestYaoPrivate", function () {
   });
 
   it("should find the richest user", async function () {
+    await submitWealthWith(this.signers.carol, this.instances.alice, 50);
     await submitWealthWith(this.signers.bob, this.instances.bob, 200);
     await submitWealthWith(this.signers.alice, this.instances.alice, 100);
 
     const richest = await ctx.yao.richest();
     expect(richest).to.equal(this.signers.bob.address);
   });
+
+  it("should not reveal the richest before everyone submitted", async function () {
+    await submitWealthWith(this.signers.carol, this.instances.alice, 50);
+    await submitWealthWith(this.signers.bob, this.instances.bob, 200);
+
+    const richest = await ctx.yao.richest();
+    expect(richest).to.equal(zeroAddress);
+  });
+
+  // it("shouldn't allow to submit twice", async function () {
+  //   await submitWealthWith(this.signers.carol, this.instances.alice, 50);
+  //   await expect(await submitWealthWith(this.signers.carol, this.instances.alice, 50)).to.be.revertedWith();
+  // });
 
   async function submitWealthWith(
     userSigner: HardhatEthersSigner,
@@ -55,7 +71,9 @@ async function deployYaoPrivateFixture(): Promise<YaoPrivate> {
   const signers = await getSigners();
 
   const contractFactory = await ethers.getContractFactory("YaoPrivate");
-  const contract = await contractFactory.connect(signers.alice).deploy([signers.alice.address, signers.bob.address]);
+  const contract = await contractFactory
+    .connect(signers.alice)
+    .deploy([signers.alice.address, signers.bob.address, signers.carol.address]);
   await contract.waitForDeployment();
 
   return contract;
